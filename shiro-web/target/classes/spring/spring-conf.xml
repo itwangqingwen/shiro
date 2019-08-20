@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <import resource="spring-dao.xml"/>
+    <import resource="spring-jedis.xml"/>
+    <context:component-scan base-package="com.immoc"/>
+    <!--创建shiroFilter过滤器-->
+    <bean class="org.apache.shiro.spring.web.ShiroFilterFactoryBean" id="shiroFilter">
+        <property name="securityManager" ref="securityManager" />
+        <property name="loginUrl" value="login.html"/>
+        <property name="unauthorizedUrl" value="error.html"/>
+        <property name="filterChainDefinitions" >
+            <value>
+                /login.html = anon
+                /subLogin = anon
+                /* = authc
+            </value>
+        </property>
+    </bean>
+    <!--加盐-->
+    <bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher" id="credentialsMatcher">
+        <property name="hashAlgorithmName" value="md5"/>
+
+        <property name="hashIterations" value="1"/>
+    </bean>
+    <!--自定义Realm-->
+    <bean class="com.immoc.realm.Realm" id="realm">
+        <property name="credentialsMatcher" ref="credentialsMatcher"/>
+    </bean>
+    <!--securityManager-->
+    <bean class="org.apache.shiro.web.mgt.DefaultWebSecurityManager" id = "securityManager">
+        <property name="realm" ref="realm"/>
+        <property name="sessionManager" ref="sessionManager"/>
+    </bean>
+    <bean class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager" id="sessionManager">
+        <property name="sessionDAO" ref="redisSessionDao"/>
+    </bean>
+    <bean class="com.immoc.session.RedisSessionDao" id="redisSessionDao"/>
+
+
+</beans>
